@@ -20,7 +20,7 @@ class MomentumDetectorServiceTest extends TestCase
         HistoricalPrice::factory()->create(['asset_id' => $asset->id, 'date' => Carbon::today()->subDays(10), 'close_price' => 1000]);
         HistoricalPrice::factory()->create(['asset_id' => $asset->id, 'date' => Carbon::today(), 'close_price' => 940]);
 
-        $service = new MomentumDetectorService();
+        $service = new MomentumDetectorService;
 
         $this->assertTrue($service->isPotentialDiscount($asset));
     }
@@ -32,7 +32,7 @@ class MomentumDetectorServiceTest extends TestCase
         HistoricalPrice::factory()->create(['asset_id' => $asset->id, 'date' => Carbon::today()->subDays(10), 'close_price' => 1000]);
         HistoricalPrice::factory()->create(['asset_id' => $asset->id, 'date' => Carbon::today(), 'close_price' => 970]);
 
-        $service = new MomentumDetectorService();
+        $service = new MomentumDetectorService;
 
         $this->assertFalse($service->isPotentialDiscount($asset));
     }
@@ -41,7 +41,7 @@ class MomentumDetectorServiceTest extends TestCase
     {
         $asset = Asset::factory()->create();
 
-        $service = new MomentumDetectorService();
+        $service = new MomentumDetectorService;
 
         $this->assertFalse($service->isPotentialDiscount($asset));
         $this->assertNull($service->thirtyDayHigh($asset));

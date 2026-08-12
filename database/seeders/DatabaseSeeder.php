@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -12,16 +11,15 @@ class DatabaseSeeder extends Seeder
 
     /**
      * Seed the application's database.
+     *
+     * Seeds the fixed asset catalog, then the committed demo price history so a
+     * fresh install has a fully populated dashboard without any API key.
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        $this->call([
+            AssetSeeder::class,
+            DemoPriceSeeder::class,
         ]);
-
-        $this->call(AssetSeeder::class);
     }
 }
