@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 
 class Asset extends Model
 {
@@ -41,7 +42,7 @@ class Asset extends Model
     /**
      * Recent historical prices ordered oldest to newest, for charting.
      *
-     * @return \Illuminate\Support\Collection<int, HistoricalPrice>
+     * @return Collection<int, HistoricalPrice>
      */
     public function recentPriceHistory(int $days = 30)
     {
