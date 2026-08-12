@@ -1,58 +1,187 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Smart Wealth Monitor
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A personal investment dashboard that tracks Indonesian stocks and gold, flags assets trading at a discount to their recent highs, and simulates what a dollar-cost-averaging plan would have returned.
 
-## About Laravel
+[![tests](https://github.com/yantogio/smart-wealth-monitor/actions/workflows/tests.yml/badge.svg)](https://github.com/yantogio/smart-wealth-monitor/actions/workflows/tests.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![PHP](https://img.shields.io/badge/PHP-8.3%2B-777BB4.svg)](https://www.php.net)
+[![Laravel](https://img.shields.io/badge/Laravel-13-FF2D20.svg)](https://laravel.com)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+> **Try it in one minute** — the repository ships with a year of real market data, so `composer setup` gives you a fully populated dashboard with no API key and no database server. See [Quick start](#quick-start).
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Screenshots
 
-## Learning Laravel
+| Dashboard | Watchlist & Analytics |
+|---|---|
+| ![Dashboard](docs/screenshots/dashboard.png) | ![Watchlist](docs/screenshots/watchlist.png) |
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+| DCA Simulator |
+|---|
+| ![DCA Simulator](docs/screenshots/dca.png) |
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+*Interface language is Indonesian.*
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+---
 
-## Agentic Development
+## What it does
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+**Momentum / discount detection.** Every asset is compared against its own trailing 30-day high. When the latest close sits more than 5% below that high, the asset is flagged as *Potensi Diskon* — surfaced as a card on the dashboard and a badge in the table. The idea is to catch pullbacks in assets you already want to own, rather than to predict the market.
 
-```bash
-composer require laravel/boost --dev
+**DCA simulator.** Pick an asset, a monthly amount, and a starting month. The simulator walks month by month through stored history, buys at the first available closing price of each month, accumulates fractional units, and values the position at the latest close. It reports capital invested, units held, current value, and how many months actually had price data — so a gap in history is visible rather than silently skipped.
 
-php artisan boost:install
+**Watchlist analytics.** A detail table per asset with a 90-day mini price chart (Chart.js) and a 7-day simple moving average alongside the discount status.
+
+**Dual-source price sync.** Stock prices come from Yahoo Finance; gold comes from metalpriceapi.com. Sync is *catch-up* rather than continuous: it finds the newest stored date per asset and fetches only the missing days, so it is cheap to run and safe to re-run.
+
+## How it works
+
+```
+   ┌──────────────────┐   ┌──────────────────┐
+   │  Yahoo Finance   │   │  metalpriceapi   │
+   │   (IDX stocks)   │   │    (XAU/USD)     │
+   └────────┬─────────┘   └────────┬─────────┘
+            │                      │
+   ┌────────▼─────────┐   ┌────────▼─────────┐
+   │YahooFinanceClient│   │ MetalsApiClient  │   fetch + normalize,
+   └────────┬─────────┘   └────────┬─────────┘   failures logged
+            │                      │             never thrown
+            └──────────┬───────────┘
+                       │
+            ┌──────────▼───────────┐
+            │  sync:prices         │   catch-up per asset,
+            │  historical:backfill │   one row per asset per day
+            └──────────┬───────────┘
+                       │
+            ┌──────────▼───────────┐
+            │  historical_prices   │◀── DemoPriceSeeder
+            │  unique(asset, date) │    (offline demo data)
+            └──────────┬───────────┘
+                       │
+      ┌────────────────┼────────────────┐
+      │                │                │
+┌─────▼──────┐  ┌──────▼──────┐  ┌──────▼──────┐
+│  Momentum  │  │     DCA     │  │  Asset SMA  │
+│  Detector  │  │  Simulation │  │  + history  │
+└─────┬──────┘  └──────┬──────┘  └──────┬──────┘
+      │                │                │
+      └────────────────┼────────────────┘
+                       │
+            ┌──────────▼───────────┐
+            │  Blade views         │
+            │  Dashboard·Watchlist │
+            │  DCA·Settings        │
+            └──────────────────────┘
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Calculation lives in services (`MomentumDetectorService`, `DcaSimulationService`), not in controllers or views. The API clients degrade quietly: a failed request logs a warning and returns an empty result, so one unreachable provider never breaks the sync for other assets.
 
-## Contributing
+**Stack:** Laravel 13 · PHP 8.3+ · Blade · Tailwind CSS 4 · Vite · Chart.js 4 · SQLite (MySQL supported)
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Quick start
 
-## Code of Conduct
+Requires PHP 8.3+, Composer, and Node.js. No database server needed.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```bash
+git clone https://github.com/yantogio/smart-wealth-monitor.git
+cd smart-wealth-monitor
+composer setup
+php artisan serve
+```
 
-## Security Vulnerabilities
+Open <http://localhost:8000>. The dashboard is already populated — `composer setup` creates a SQLite file, migrates it, and seeds a year of real market data bundled with the repository.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### About the demo data
+
+`database/data/demo-prices.json` holds roughly a year of genuine closing prices for all four assets, captured from the live APIs. Two things are worth knowing:
+
+- **Dates are shifted, prices are not.** The seeder moves every date forward by one constant offset so the newest record lands on the day you seed. Without this, the 30-day momentum window would empty out and the dashboard would go blank a month after capture. Price values are stored exactly as recorded, and the file keeps the real observation dates.
+- **Demo gold is COMEX futures.** Spot XAU/USD requires a paid metalpriceapi key, so the bundled gold series uses Yahoo's `GC=F` gold futures instead. Live sync still uses metalpriceapi spot. The `source` field on every asset in the dataset records its provenance.
+
+Regenerate the dataset from your own synced database at any time:
+
+```bash
+php artisan demo:export-prices
+```
+
+## Running against live prices
+
+The demo path needs nothing below. This section is for tracking real current prices.
+
+1. Get a free API key from [metalpriceapi.com](https://metalpriceapi.com) (gold only; stocks need no key).
+2. Add it to `.env` as `METALS_API_KEY=...`, or paste it into **System Settings** in the app.
+3. Fetch history and keep it current:
+
+```bash
+php artisan historical:backfill --days=365   # deep backfill, one time
+php artisan sync:prices                      # catch-up, safe to re-run
+```
+
+`sync:prices` is registered to run daily at 18:00 (after the IDX close). To make that fire, either run `php artisan schedule:work` alongside the app, or add the standard Laravel cron entry:
+
+```
+* * * * * cd /path/to/project && php artisan schedule:run >> /dev/null 2>&1
+```
+
+You can also trigger a sync by hand from the **System Settings** page.
+
+<details>
+<summary><strong>Using MySQL instead of SQLite</strong></summary>
+
+Edit `.env`:
+
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=smart_wealth_monitor
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+Create the database, then run `php artisan migrate --seed`. Nothing in the codebase is engine-specific.
+
+</details>
+
+## Testing
+
+```bash
+php artisan test
+```
+
+39 tests covering the momentum and DCA calculations, both API clients, the sync and backfill commands, demo seeding and export, schedule registration, and HTTP rendering of every page. The suite runs against in-memory SQLite and touches no network, so CI needs no service containers.
+
+## Spec-driven development
+
+This project was built specification-first using [OpenSpec](https://github.com/Fission-AI/OpenSpec). Every capability has a written spec with testable scenarios before implementation:
+
+```
+openspec/specs/
+├── asset-catalog/            fixed watchlist storage and listing
+├── dashboard-ui/             sidebar layout, price summary, discount cards
+├── dca-simulator/            input form, calculation, output
+├── demo-data-seeding/        offline dataset, date anchoring, regeneration
+├── historical-price-backfill/deep backfill command
+├── momentum-detection/       30-day high, discount flagging
+├── price-sync/               storage, dual sources, catch-up, scheduling
+├── project-onboarding/       README, setup path, license
+├── system-settings-ui/       API key management, force sync
+└── watchlist-analytics-ui/   detail table, mini chart, SMA
+```
+
+Requirements are written as `WHEN … THEN` scenarios, which map directly onto tests. `openspec/changes/archive/` keeps the history of how each change was proposed, designed, and applied.
+
+## Security note
+
+This application has **no authentication**. It is a local, single-user tool. The System Settings page — which stores the API key and can trigger syncs that consume your API quota — is reachable by anyone who can reach the app. Do not expose an instance publicly without adding access control first.
+
+## Scope
+
+Deliberately kept small: the watchlist is fixed at four assets (BBCA, BBRI, TLKM, and gold) defined in `AssetSeeder`, with no asset CRUD. The goal was a focused, well-specified tool rather than a broad one.
+
+Nothing here is investment advice. "Potensi Diskon" is a mechanical comparison against a 30-day high, not a recommendation.
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+[MIT](LICENSE) © Muhammad Hariyanto Gionova
