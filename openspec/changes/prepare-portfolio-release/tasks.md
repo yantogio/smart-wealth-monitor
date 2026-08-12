@@ -69,7 +69,7 @@
 
 ## 10. Release
 
-- [ ] 10.1 Archive the completed `fix-dca-history-and-gold-source` change
-- [ ] 10.2 Review `git status` and stage the work in logical commits rather than one bulk commit
-- [ ] 10.3 Confirm `.env` is not staged and the dataset file contains no API keys or personal data
-- [ ] 10.4 Push and verify on GitHub: README renders, images load, badge is green, license is detected
+- [x] 10.1 Archive the completed `fix-dca-history-and-gold-source` change — used `--skip-specs` because the main specs had already been synced, which was why the normal archive aborted
+- [x] 10.2 Stage the work in logical commits on branch `prepare-portfolio-release` — 9 commits, including one for the previously uncommitted change
+- [x] 10.3 Confirm `.env` is gitignored and the dataset contains no API keys or personal data
+- [ ] 10.4 Push and verify on GitHub: README renders, images load, badge is green, license is detected — **requires push**
