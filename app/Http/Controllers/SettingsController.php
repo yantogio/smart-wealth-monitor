@@ -12,7 +12,7 @@ class SettingsController extends Controller
 {
     public function index(): View
     {
-        $storedKey = Setting::getValue('goldapi_key');
+        $storedKey = Setting::getValue('metals_api_key');
 
         return view('settings.index', [
             'maskedApiKey' => $storedKey ? $this->mask($storedKey) : null,
@@ -22,10 +22,10 @@ class SettingsController extends Controller
     public function updateApiKey(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'goldapi_key' => ['required', 'string', 'max:255'],
+            'metals_api_key' => ['required', 'string', 'max:255'],
         ]);
 
-        Setting::setValue('goldapi_key', $validated['goldapi_key']);
+        Setting::setValue('metals_api_key', $validated['metals_api_key']);
 
         return redirect()->route('settings.index')->with('status', 'API key berhasil disimpan.');
     }

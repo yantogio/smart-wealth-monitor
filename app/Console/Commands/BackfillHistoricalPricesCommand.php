@@ -11,40 +11,27 @@ use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 
-#[Signature('sync:prices')]
-#[Description('Catch-up sync: fetch and store any missing daily prices for all tracked assets.')]
-class SyncPricesCommand extends Command
+#[Signature('historical:backfill {--days=730 : How many days of history to fetch, counting back from today}')]
+#[Description('Deep backfill: fetch and store historical daily prices for all tracked assets over a configurable window.')]
+class BackfillHistoricalPricesCommand extends Command
 {
-    /**
-     * Default number of days to look back when an asset has no price history yet.
-     */
-    private const DEFAULT_LOOKBACK_DAYS = 30;
-
     public function handle(YahooFinanceClient $yahoo, MetalsApiClient $metalsApi): int
     {
+        $days = max(1, (int) $this->option('days'));
         $today = Carbon::today();
+        $from = $today->copy()->subDays($days);
         $hadFailure = false;
+
+        $this->info("Backfilling prices from {$from->toDateString()} to {$today->toDateString()}...");
 
         foreach (Asset::all() as $asset) {
             try {
-                $latestDate = $asset->historicalPrices()->max('date');
-
-                $from = $latestDate
-                    ? Carbon::parse($latestDate)->addDay()
-                    : $today->copy()->subDays(self::DEFAULT_LOOKBACK_DAYS);
-
-                if ($from->gt($today)) {
-                    $this->info("{$asset->code}: already up to date.");
-
-                    continue;
-                }
-
                 $prices = $asset->type === 'gold'
                     ? $metalsApi->getHistoricalCloses($from, $today)
                     : $yahoo->getHistoricalCloses($asset->code, $from, $today);
 
                 if (empty($prices)) {
-                    $this->warn("{$asset->code}: no new prices fetched.");
+                    $this->warn("{$asset->code}: no prices fetched.");
 
                     continue;
                 }
@@ -56,10 +43,10 @@ class SyncPricesCommand extends Command
                     );
                 }
 
-                $this->info("{$asset->code}: synced ".count($prices).' price(s).');
+                $this->info("{$asset->code}: backfilled ".count($prices).' price(s).');
             } catch (\Throwable $e) {
                 $hadFailure = true;
-                $this->error("{$asset->code}: sync failed - {$e->getMessage()}");
+                $this->error("{$asset->code}: backfill failed - {$e->getMessage()}");
             }
         }
 

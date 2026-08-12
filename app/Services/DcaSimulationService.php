@@ -15,6 +15,7 @@ class DcaSimulationService
      *     total_units: float,
      *     current_value: float,
      *     months_invested: int,
+     *     months_requested: int,
      * }|null Null if there is no price data available on or after the start month.
      */
     public function simulate(Asset $asset, float $monthlyAmount, Carbon $startMonth): ?array
@@ -29,8 +30,11 @@ class DcaSimulationService
         $totalCapital = 0.0;
         $totalUnits = 0.0;
         $monthsInvested = 0;
+        $monthsRequested = 0;
 
         for ($month = $start->copy(); $month->lte($end); $month->addMonthNoOverflow()) {
+            $monthsRequested++;
+
             $price = $asset->historicalPrices()
                 ->where('date', '>=', $month->toDateString())
                 ->where('date', '<', $month->copy()->addMonthNoOverflow()->toDateString())
@@ -59,6 +63,7 @@ class DcaSimulationService
             'total_units' => $totalUnits,
             'current_value' => $totalUnits * $latestPrice,
             'months_invested' => $monthsInvested,
+            'months_requested' => $monthsRequested,
         ];
     }
 }

@@ -61,6 +61,13 @@
             <h2 class="text-lg font-semibold mb-4">Hasil Simulasi</h2>
 
             @if ($result)
+                @if ($result['months_invested'] < $result['months_requested'])
+                    <div class="mb-4 rounded-md bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 text-sm">
+                        Data harga hanya tersedia untuk {{ $result['months_invested'] }} dari {{ $result['months_requested'] }} bulan yang diminta.
+                        Hasil simulasi didasarkan pada bulan yang memiliki data saja — jalankan sinkronisasi/backfill data untuk hasil yang lengkap.
+                    </div>
+                @endif
+
                 <dl class="space-y-3">
                     <div class="flex justify-between">
                         <dt class="text-sm text-gray-500">Jumlah Bulan Investasi</dt>

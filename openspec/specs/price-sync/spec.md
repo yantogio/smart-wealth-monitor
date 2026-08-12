@@ -27,15 +27,19 @@ The system SHALL fetch historical closing prices for tracked stock assets (BBCA.
 - **WHEN** the Yahoo Finance request fails or returns an error
 - **THEN** the system logs the failure and does not crash the sync process for other assets
 
-### Requirement: Gold Price Fetching via GoldAPI.io
-The system SHALL fetch historical or current XAU/USD prices from GoldAPI.io using an API key configured in the environment.
+### Requirement: Gold Price Fetching via Metals API
+The system SHALL fetch historical or current XAU/USD prices from a metals price provider (metalpriceapi.com) that supports historical date-based lookups, using an API key configured in the environment.
 
-#### Scenario: Successful gold price fetch
-- **WHEN** the sync process requests a gold price for a given date
-- **THEN** the system retrieves the XAU/USD price from GoldAPI.io using the configured API key
+#### Scenario: Successful gold price fetch for a past date
+- **WHEN** the sync or backfill process requests a gold price for a specific past date
+- **THEN** the system retrieves the XAU/USD closing price for that exact date from the metals API using the configured API key
+
+#### Scenario: Successful gold price fetch for today
+- **WHEN** the sync process requests a gold price for the current date
+- **THEN** the system retrieves the current XAU/USD price from the metals API using the configured API key
 
 #### Scenario: Missing API key handled
-- **WHEN** the GoldAPI.io API key is not configured
+- **WHEN** the metals API key is not configured
 - **THEN** the system skips the gold price fetch, logs a clear error, and does not crash the sync process for other assets
 
 ### Requirement: Catch-Up Sync Command

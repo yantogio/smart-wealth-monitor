@@ -5,7 +5,7 @@
 @section('content')
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div class="bg-white rounded-lg shadow p-6">
-            <h2 class="text-lg font-semibold mb-4">GoldAPI.io API Key</h2>
+            <h2 class="text-lg font-semibold mb-4">MetalpriceAPI API Key</h2>
 
             @if ($maskedApiKey)
                 <p class="text-sm text-gray-500 mb-4">Kunci saat ini: <span class="font-mono">{{ $maskedApiKey }}</span></p>
@@ -27,8 +27,8 @@
                 @csrf
 
                 <div>
-                    <label for="goldapi_key" class="block text-sm font-medium text-gray-700">GoldAPI.io API Key</label>
-                    <input type="password" id="goldapi_key" name="goldapi_key"
+                    <label for="metals_api_key" class="block text-sm font-medium text-gray-700">MetalpriceAPI API Key</label>
+                    <input type="password" id="metals_api_key" name="metals_api_key"
                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
                            placeholder="Masukkan API key baru" required>
                 </div>

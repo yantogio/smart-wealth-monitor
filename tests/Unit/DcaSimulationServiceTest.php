@@ -23,13 +23,14 @@ class DcaSimulationServiceTest extends TestCase
 
         Carbon::setTestNow('2026-03-10');
 
-        $service = new DcaSimulationService();
+        $service = new DcaSimulationService;
         $result = $service->simulate($asset, 1000000, Carbon::parse('2026-01-01'));
 
         Carbon::setTestNow();
 
         $this->assertNotNull($result);
         $this->assertSame(3, $result['months_invested']);
+        $this->assertSame(3, $result['months_requested']);
         $this->assertEquals(3_000_000, $result['total_capital']);
 
         $expectedUnits = (1_000_000 / 1000) + (1_000_000 / 1250) + (1_000_000 / 800);
@@ -47,21 +48,49 @@ class DcaSimulationServiceTest extends TestCase
 
         Carbon::setTestNow('2026-03-10');
 
-        $service = new DcaSimulationService();
+        $service = new DcaSimulationService;
         $result = $service->simulate($asset, 500000, Carbon::parse('2026-01-01'));
 
         Carbon::setTestNow();
 
         $this->assertNotNull($result);
         $this->assertSame(2, $result['months_invested']);
+        $this->assertSame(3, $result['months_requested']);
         $this->assertEquals(1_000_000, $result['total_capital']);
+    }
+
+    public function test_full_year_simulation_invests_every_month_when_data_is_complete(): void
+    {
+        $asset = Asset::factory()->create();
+
+        $month = Carbon::parse('2025-07-01');
+        for ($i = 0; $i < 12; $i++) {
+            HistoricalPrice::factory()->create([
+                'asset_id' => $asset->id,
+                'date' => $month->copy()->addDays(4)->toDateString(),
+                'close_price' => 1000 + $i,
+            ]);
+            $month->addMonthNoOverflow();
+        }
+
+        Carbon::setTestNow('2026-06-15');
+
+        $service = new DcaSimulationService;
+        $result = $service->simulate($asset, 1000000, Carbon::parse('2025-07-01'));
+
+        Carbon::setTestNow();
+
+        $this->assertNotNull($result);
+        $this->assertSame(12, $result['months_invested']);
+        $this->assertSame(12, $result['months_requested']);
+        $this->assertEquals(12_000_000, $result['total_capital']);
     }
 
     public function test_returns_null_when_no_price_data_available_for_period(): void
     {
         $asset = Asset::factory()->create();
 
-        $service = new DcaSimulationService();
+        $service = new DcaSimulationService;
         $result = $service->simulate($asset, 500000, Carbon::parse('2026-01-01'));
 
         $this->assertNull($result);

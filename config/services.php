@@ -35,8 +35,8 @@ return [
         ],
     ],
 
-    'goldapi' => [
-        'key' => env('GOLDAPI_KEY'),
+    'metals' => [
+        'key' => env('METALS_API_KEY'),
     ],
 
 ];
