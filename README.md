@@ -11,20 +11,6 @@ A personal investment dashboard that tracks Indonesian stocks and gold, flags as
 
 ---
 
-## Screenshots
-
-| Dashboard | Watchlist & Analytics |
-|---|---|
-| ![Dashboard](docs/screenshots/dashboard.png) | ![Watchlist](docs/screenshots/watchlist.png) |
-
-| DCA Simulator |
-|---|
-| ![DCA Simulator](docs/screenshots/dca.png) |
-
-*Interface language is Indonesian.*
-
----
-
 ## What it does
 
 **Momentum / discount detection.** Every asset is compared against its own trailing 30-day high. When the latest close sits more than 5% below that high, the asset is flagged as *Potensi Diskon* — surfaced as a card on the dashboard and a badge in the table. The idea is to catch pullbacks in assets you already want to own, rather than to predict the market.
