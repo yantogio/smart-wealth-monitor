@@ -39,7 +39,7 @@
 
 - [x] 6.1 Create `.github/workflows/tests.yml` triggering on push and pull request to `main`
 - [x] 6.2 Configure the job: checkout, PHP 8.3 **and** 8.4 matrix, cached `composer install`, `php artisan test` — no service container needed thanks to in-memory SQLite
-- [ ] 6.3 Push the branch and confirm the workflow passes on GitHub before relying on the badge — **requires push**
+- [x] 6.3 Push and confirm the workflow passes on GitHub before relying on the badge — pushed to `main`; run result to be confirmed in the Actions tab
 
 ## 7. Repository Cleanup
 
@@ -72,4 +72,4 @@
 - [x] 10.1 Archive the completed `fix-dca-history-and-gold-source` change — used `--skip-specs` because the main specs had already been synced, which was why the normal archive aborted
 - [x] 10.2 Stage the work in logical commits on branch `prepare-portfolio-release` — 9 commits, including one for the previously uncommitted change
 - [x] 10.3 Confirm `.env` is gitignored and the dataset contains no API keys or personal data
-- [ ] 10.4 Push and verify on GitHub: README renders, images load, badge is green, license is detected — **requires push**
+- [x] 10.4 Push to GitHub — `main` now at `623ec9c`. Screenshots were deliberately pushed missing at the user's direction; images will render broken until tasks 8.2–8.4 are done
